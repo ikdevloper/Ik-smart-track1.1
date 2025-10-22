@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 SmartTrack - Expense Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-primary: #f9fafb;
+            --bg-secondary: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px var(--shadow);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        .sync-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+
+        .sync-status.connected {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .sync-status.disconnected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .integration-panel {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .integration-panel h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: var(--text-secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px var(--shadow);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .amount {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card.income .amount {
+            color: var(--success);
+        }
+
+        .stat-card.expense .amount {
+            color: var(--danger);
+        }
+
+        .stat-card.savings .amount {
+            color: var(--primary);
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s ease;
+        }
+
+        .transaction-item:hover {
+            background: var(--bg-primary);
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-category {
+            font-size: 1.5em;
+            margin-right: 15px;
+        }
+
+        .transaction-desc {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .transaction-date {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .transaction-amount {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .transaction-amount.income {
+            color: var(--success);
+        }
+
+        .transaction-amount.expense {
+            color: var(--danger);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .filter-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            float: right;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid var(--primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .transaction-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .loader {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>💰 SmartTrack</h1>
+            <p>Your Personal Expense & Savings Manager</p>
+            <div class="sync-status disconnected" id="syncStatus">
+                <span>⚠️</span>
+                <span>Not Connected to Google Sheets</span>
+            </div>
+        </div>
+
+        <!-- Alert Messages -->
+        <div class="alert" id="alertBox"></div>
+
+        <!-- Google Sheets Integration Panel -->
+        <div class="integration-panel">
+            <h3>🔗 Google Sheets Integration</h3>
+            <div class="input-group">
+                <label for="apiUrl">App Script Web App URL:</label>
+                <input type="url" id="apiUrl" placeholder="https://script.google.com/macros/s/YOUR-SCRIPT-ID/exec">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="saveIntegration()">
+                    💾 Save Integration
+                </button>
+                <button class="btn btn-success" onclick="testConnection()">
+                    ✓ Test Connection
+                </button>
+                <button class="btn btn-secondary" onclick="syncWithGoogleSheets()">
+                    🔄 Sync Now
+                </button>
+                <button class="btn btn-secondary" onclick="showAppScriptCode()">
+                    📄 View AppScript Code
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card income">
+                <h3>Total Income</h3>
+                <div class="amount" id="totalIncome">₹0.00</div>
+            </div>
+            <div class="stat-card expense">
+                <h3>Total Expenses</h3>
+                <div class="amount" id="totalExpenses">₹0.00</div>
+            </div>
+            <div class="stat-card savings">
+                <h3>Net Savings</h3>
+                <div class="amount" id="netSavings">₹0.00</div>
+            </div>
+            <div class="stat-card">
+                <h3>Budget Remaining</h3>
+                <div class="amount" id="budgetRemaining">₹0.00</div>
+            </div>
+        </div>
+
+        <!-- Add Transaction Form -->
+        <div class="card">
+            <h2>➕ Add Transaction</h2>
+            <form id="transactionForm">
+                <div class="input-group">
+                    <label for="transactionType">Type:</label>
+                    <select id="transactionType" required>
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="amount">Amount (₹):</label>
+                    <input type="number" id="amount" step="0.01" min="0" required>
+                </div>
+                <div class="input-group">
+                    <label for="category">Category:</label>
+                    <select id="category" required>
+                        <option value="🍔 Food & Dining">🍔 Food & Dining</option>
+                        <option value="🚗 Transportation">🚗 Transportation</option>
+                        <option value="🛍️ Shopping">🛍️ Shopping</option>
+                        <option value="💡 Bills & Utilities">💡 Bills & Utilities</option>
+                        <option value="🎬 Entertainment">🎬 Entertainment</option>
+                        <option value="🏥 Healthcare">🏥 Healthcare</option>
+                        <option value="📚 Education">📚 Education</option>
+                        <option value="🏠 Rent">🏠 Rent</option>
+                        <option value="💼 Salary">💼 Salary</option>
+                        <option value="📈 Investment">📈 Investment</option>
+                        <option value="📌 Other">📌 Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="description">Description/Reason:</label>
+                    <input type="text" id="description" placeholder="Enter description" required>
+                </div>
+                <div class="input-group">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" required>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">➕ Add Transaction</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">🔄 Clear Form</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Financial Goals -->
+        <div class="card">
+            <h2>🎯 Financial Goals</h2>
+            <form id="goalForm">
+                <div class="input-group">
+                    <label for="goalName">Goal Name:</label>
+                    <input type="text" id="goalName" placeholder="e.g., Emergency Fund" required>
+                </div>
+                <div class="input-group">
+                    <label for="goalAmount">Target Amount (₹):</label>
+                    <input type="number" id="goalAmount" step="0.01" min="0" required>
+                </div>
+                <div class="input-group">
+                    <label for="goalType">Goal Type:</label>
+                    <select id="goalType" required>
+                        <option value="savings">Savings Goal</option>
+                        <option value="budget">Budget Limit</option>
+                        <option value="event">Event Budget</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">➕ Add Goal</button>
+            </form>
+            <div id="goalsList" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card">
+            <h2>📊 Recent Transactions</h2>
+            <div class="filter-tabs">
+                <div class="filter-tab active" onclick="filterTransactions('all')">All</div>
+                <div class="filter-tab" onclick="filterTransactions('expense')">Expenses</div>
+                <div class="filter-tab" onclick="filterTransactions('income')">Income</div>
+                <div class="filter-tab" onclick="filterTransactions('today')">Today</div>
+                <div class="filter-tab" onclick="filterTransactions('week')">This Week</div>
+                <div class="filter-tab" onclick="filterTransactions('month')">This Month</div>
+            </div>
+            <div id="transactionsList"></div>
+        </div>
+    </div>
+
+    <!-- Modal for AppScript Code -->
+    <div class="modal" id="codeModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2>📄 Google Apps Script Code</h2>
+            <p><strong>Instructions:</strong></p>
+            <ol style="margin: 15px 0; line-height: 1.8;">
+                <li>Go to <a href="https://sheets.google.com" target="_blank">Google Sheets</a> and create a new spreadsheet</li>
+                <li>Click <strong>Extensions → Apps Script</strong></li>
+                <li>Delete any existing code and paste the code below</li>
+                <li>Click <strong>Deploy → New deployment</strong></li>
+                <li>Select type: <strong>Web app</strong></li>
+                <li>Set "Execute as" to <strong>Me</strong></li>
+                <li>Set "Who has access" to <strong>Anyone</strong></li>
+                <li>Click <strong>Deploy</strong> and copy the Web App URL</li>
+                <li>Paste the URL in the integration panel above</li>
+            </ol>
+            <button class="btn btn-primary" onclick="copyCode()">📋 Copy Code</button>
+            <div class="code-block" id="appScriptCode"></div>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeEditModal()">&times;</span>
+            <h2>✏️ Edit Transaction</h2>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+                <div class="input-group">
+                    <label for="editType">Type:</label>
+                    <select id="editType" required>
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="editAmount">Amount (₹):</label>
+                    <input type="number" id="editAmount" step="0.01" min="0" required>
+                </div>
+                <div class="input-group">
+                    <label for="editCategory">Category:</label>
+                    <select id="editCategory" required>
+                        <option value="🍔 Food & Dining">🍔 Food & Dining</option>
+                        <option value="🚗 Transportation">🚗 Transportation</option>
+                        <option value="🛍️ Shopping">🛍️ Shopping</option>
+                        <option value="💡 Bills & Utilities">💡 Bills & Utilities</option>
+                        <option value="🎬 Entertainment">🎬 Entertainment</option>
+                        <option value="🏥 Healthcare">🏥 Healthcare</option>
+                        <option value="📚 Education">📚 Education</option>
+                        <option value="🏠 Rent">🏠 Rent</option>
+                        <option value="💼 Salary">💼 Salary</option>
+                        <option value="📈 Investment">📈 Investment</option>
+                        <option value="📌 Other">📌 Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="editDescription">Description:</label>
+                    <input type="text" id="editDescription" required>
+                </div>
+                <div class="input-group">
+                    <label for="editDate">Date:</label>
+                    <input type="date" id="editDate" required>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let transactions = [];
+        let goals = [];
+        let currentFilter = 'all';
+        let apiUrl = '';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            setTodayDate();
+            loadFromLocalStorage();
+            loadApiUrl();
+            updateStats();
+            displayTransactions();
+            displayGoals();
+        });
+
+        // Set today's date as default
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        }
+
+        // Save/Load from localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            localStorage.setItem('goals', JSON.stringify(goals));
+        }
+
+        function loadFromLocalStorage() {
+            const savedTransactions = localStorage.getItem('transactions');
+            const savedGoals = localStorage.getItem('goals');
+
+            if (savedTransactions) {
+                transactions = JSON.parse(savedTransactions);
+            }
+            if (savedGoals) {
+                goals = JSON.parse(savedGoals);
+            }
+        }
+
+        function loadApiUrl() {
+            const saved = localStorage.getItem('apiUrl');
+            if (saved) {
+                apiUrl = saved;
+                document.getElementById('apiUrl').value = apiUrl;
+                updateSyncStatus(true);
+            }
+        }
+
+        // Integration functions
+        function saveIntegration() {
+            const url = document.getElementById('apiUrl').value.trim();
+            if (!url) {
+                showAlert('Please enter a valid URL', 'error');
+                return;
+            }
+            apiUrl = url;
+            localStorage.setItem('apiUrl', apiUrl);
+            showAlert('Integration URL saved successfully!', 'success');
+            updateSyncStatus(true);
+        }
+
+        async function testConnection() {
+            if (!apiUrl) {
+                showAlert('Please save the App Script URL first', 'error');
+                return;
+            }
+
+            try {
+                showAlert('Testing connection...', 'info');
+                const response = await fetch(apiUrl + '?action=test', {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showAlert('✓ Connection successful! Google Sheets is connected.', 'success');
+                    updateSyncStatus(true);
+                } else {
+                    showAlert('Connection test completed but received unexpected response', 'error');
+                }
+            } catch (error) {
+                showAlert('Connection failed: ' + error.message, 'error');
+                updateSyncStatus(false);
+            }
+        }
+
+        async function syncWithGoogleSheets() {
+            if (!apiUrl) {
+                showAlert('Please configure Google Sheets integration first', 'error');
+                return;
+            }
+
+            try {
+                showAlert('Syncing with Google Sheets...', 'info');
+
+                // First, fetch data from Google Sheets
+                const response = await fetch(apiUrl + '?action=getData', {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Load transactions from Google Sheets
+                    if (result.transactions && result.transactions.length > 0) {
+                        transactions = result.transactions;
+                        saveToLocalStorage();
+                        displayTransactions();
+                        updateStats();
+                    }
+
+                    // Load goals from Google Sheets
+                    if (result.goals && result.goals.length > 0) {
+                        goals = result.goals;
+                        saveToLocalStorage();
+                        displayGoals();
+                        updateStats();
+                    }
+
+                    showAlert('✓ Data synced successfully from Google Sheets!', 'success');
+                    updateSyncStatus(true);
+                } else {
+                    showAlert('Sync completed but no data found', 'info');
+                }
+            } catch (error) {
+                showAlert('Sync failed: ' + error.message, 'error');
+                console.error('Sync error:', error);
+            }
+        }
+
+        function updateSyncStatus(connected) {
+            const status = document.getElementById('syncStatus');
+            if (connected) {
+                status.className = 'sync-status connected';
+                status.innerHTML = '<span>✓</span><span>Connected to Google Sheets</span>';
+            } else {
+                status.className = 'sync-status disconnected';
+                status.innerHTML = '<span>⚠️</span><span>Not Connected to Google Sheets</span>';
+            }
+        }
+
+        // Transaction functions
+        document.getElementById('transactionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await addTransaction();
+        });
+
+        async function addTransaction() {
+            const transaction = {
+                id: Date.now(),
+                type: document.getElementById('transactionType').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value,
+                date: document.getElementById('date').value,
+                timestamp: new Date().toISOString()
+            };
+
+            transactions.unshift(transaction);
+            saveToLocalStorage();
+            displayTransactions();
+            updateStats();
+            clearForm();
+            showAlert('Transaction added successfully!', 'success');
+
+            // Sync with Google Sheets
+            if (apiUrl) {
+                try {
+                    await fetch(apiUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'addTransaction',
+                            data: transaction
+                        }),
+                        redirect: 'follow'
+                    });
+                } catch (error) {
+                    console.error('Failed to sync with Google Sheets:', error);
+                }
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('transactionForm').reset();
+            setTodayDate();
+        }
+
+        // Goal functions
+        document.getElementById('goalForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await addGoal();
+        });
+
+        async function addGoal() {
+            const goal = {
+                id: Date.now(),
+                name: document.getElementById('goalName').value,
+                amount: parseFloat(document.getElementById('goalAmount').value),
+                type: document.getElementById('goalType').value,
+                current: 0,
+                timestamp: new Date().toISOString()
+            };
+
+            goals.push(goal);
+            saveToLocalStorage();
+            displayGoals();
+            updateStats();
+            document.getElementById('goalForm').reset();
+            showAlert('Goal added successfully!', 'success');
+
+            // Sync with Google Sheets
+            if (apiUrl) {
+                try {
+                    await fetch(apiUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'addGoal',
+                            data: goal
+                        }),
+                        redirect: 'follow'
+                    });
+                } catch (error) {
+                    console.error('Failed to sync goal with Google Sheets:', error);
+                }
+            }
+        }
+
+        function displayGoals() {
+            const container = document.getElementById('goalsList');
+            if (goals.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No goals added yet</p></div>';
+                return;
+            }
+
+            let html = '';
+            goals.forEach(goal => {
+                const progress = (goal.current / goal.amount) * 100;
+                html += `
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-desc">${goal.name}</div>
+                            <div class="transaction-date">Target: ₹${goal.amount.toFixed(2)} | Progress: ${progress.toFixed(1)}%</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-danger btn-sm" onclick="deleteGoal(${goal.id})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function deleteGoal(id) {
+            if (confirm('Are you sure you want to delete this goal?')) {
+                goals = goals.filter(g => g.id !== id);
+                saveToLocalStorage();
+                displayGoals();
+                updateStats();
+                showAlert('Goal deleted successfully', 'success');
+
+                // Sync with Google Sheets
+                if (apiUrl) {
+                    try {
+                        await fetch(apiUrl, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action: 'deleteGoal',
+                                id: id
+                            }),
+                            redirect: 'follow'
+                        });
+                    } catch (error) {
+                        console.error('Failed to sync deletion with Google Sheets:', error);
+                    }
+                }
+            }
+        }
+
+        // Display transactions
+        function displayTransactions() {
+            const container = document.getElementById('transactionsList');
+            let filtered = filterTransactionsByType();
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No transactions found</h3><p>Start by adding your first transaction above</p></div>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(trans => {
+                const emoji = trans.category.split(' ')[0];
+                const amountClass = trans.type === 'income' ? 'income' : 'expense';
+                const sign = trans.type === 'income' ? '+' : '-';
+
+                html += `
+                    <div class="transaction-item">
+                        <span class="transaction-category">${emoji}</span>
+                        <div class="transaction-info">
+                            <div class="transaction-desc">${trans.description}</div>
+                            <div class="transaction-date">${trans.category} • ${formatDate(trans.date)}</div>
+                        </div>
+                        <div class="transaction-amount ${amountClass}">${sign}₹${trans.amount.toFixed(2)}</div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-sm" onclick="editTransaction(${trans.id})">✏️</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${trans.id})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function filterTransactionsByType() {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+            switch(currentFilter) {
+                case 'expense':
+                    return transactions.filter(t => t.type === 'expense');
+                case 'income':
+                    return transactions.filter(t => t.type === 'income');
+                case 'today':
+                    return transactions.filter(t => t.date === today);
+                case 'week':
+                    return transactions.filter(t => t.date >= weekAgo);
+                case 'month':
+                    return transactions.filter(t => t.date >= monthAgo);
+                default:
+                    return transactions;
+            }
+        }
+
+        function filterTransactions(type) {
+            currentFilter = type;
+
+            // Update active tab
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            displayTransactions();
+        }
+
+        function editTransaction(id) {
+            const trans = transactions.find(t => t.id === id);
+            if (!trans) return;
+
+            document.getElementById('editId').value = trans.id;
+            document.getElementById('editType').value = trans.type;
+            document.getElementById('editAmount').value = trans.amount;
+            document.getElementById('editCategory').value = trans.category;
+            document.getElementById('editDescription').value = trans.description;
+            document.getElementById('editDate').value = trans.date;
+
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await saveEdit();
+        });
+
+        async function saveEdit() {
+            const id = parseInt(document.getElementById('editId').value);
+            const index = transactions.findIndex(t => t.id === id);
+
+            if (index !== -1) {
+                transactions[index] = {
+                    ...transactions[index],
+                    type: document.getElementById('editType').value,
+                    amount: parseFloat(document.getElementById('editAmount').value),
+                    category: document.getElementById('editCategory').value,
+                    description: document.getElementById('editDescription').value,
+                    date: document.getElementById('editDate').value
+                };
+
+                saveToLocalStorage();
+                displayTransactions();
+                updateStats();
+                closeEditModal();
+                showAlert('Transaction updated successfully!', 'success');
+
+                // Sync with Google Sheets
+                if (apiUrl) {
+                    try {
+                        await fetch(apiUrl, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action: 'updateTransaction',
+                                data: transactions[index]
+                            }),
+                            redirect: 'follow'
+                        });
+                    } catch (error) {
+                        console.error('Failed to sync update with Google Sheets:', error);
+                    }
+                }
+            }
+        }
+
+        async function deleteTransaction(id) {
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveToLocalStorage();
+                displayTransactions();
+                updateStats();
+                showAlert('Transaction deleted successfully', 'success');
+
+                // Sync with Google Sheets
+                if (apiUrl) {
+                    try {
+                        await fetch(apiUrl, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action: 'deleteTransaction',
+                                id: id
+                            }),
+                            redirect: 'follow'
+                        });
+                    } catch (error) {
+                        console.error('Failed to sync deletion with Google Sheets:', error);
+                    }
+                }
+            }
+        }
+
+        // Statistics
+        function updateStats() {
+            const income = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const expenses = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const savings = income - expenses;
+
+            const budgetGoals = goals.filter(g => g.type === 'budget');
+            const totalBudget = budgetGoals.reduce((sum, g) => sum + g.amount, 0);
+            const budgetRemaining = totalBudget - expenses;
+
+            document.getElementById('totalIncome').textContent = '₹' + income.toFixed(2);
+            document.getElementById('totalExpenses').textContent = '₹' + expenses.toFixed(2);
+            document.getElementById('netSavings').textContent = '₹' + savings.toFixed(2);
+            document.getElementById('budgetRemaining').textContent = '₹' + budgetRemaining.toFixed(2);
+        }
+
+        // Utility functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-IN', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.className = `alert alert-${type} show`;
+            alertBox.textContent = message;
+
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Modal functions
+        function showAppScriptCode() {
+            const code = `// Google Apps Script Code for SmartTrack Expense Tracker
+// Deploy this as a Web App with "Execute as: Me" and "Who has access: Anyone"
+
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var action = e.parameter.action || 'test';
+
+  if (action === 'test') {
+    return createResponse({ status: 'success', message: 'Connection successful!' });
+  }
+
+  if (action === 'getData') {
+    return getData();
+  }
+
+  return createResponse({ status: 'error', message: 'Invalid action' });
+}
+
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var action = data.action;
+
+    switch(action) {
+      case 'addTransaction':
+        return addTransaction(data.data);
+      case 'updateTransaction':
+        return updateTransaction(data.data);
+      case 'deleteTransaction':
+        return deleteTransaction(data.id);
+      case 'addGoal':
+        return addGoal(data.data);
+      case 'deleteGoal':
+        return deleteGoal(data.id);
+      default:
+        return createResponse({ status: 'error', message: 'Invalid action' });
+    }
+  } catch (error) {
+    return createResponse({ status: 'error', message: error.toString() });
+  }
+}
+
+function getData() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Get Transactions
+  var transSheet = getOrCreateSheet('Transactions');
+  var transData = transSheet.getDataRange().getValues();
+  var transactions = [];
+
+  if (transData.length > 1) {
+    for (var i = 1; i < transData.length; i++) {
+      transactions.push({
+        id: transData[i][0],
+        type: transData[i][1],
+        amount: transData[i][2],
+        category: transData[i][3],
+        description: transData[i][4],
+        date: transData[i][5],
+        timestamp: transData[i][6]
+      });
+    }
+  }
+
+  // Get Goals
+  var goalSheet = getOrCreateSheet('Goals');
+  var goalData = goalSheet.getDataRange().getValues();
+  var goals = [];
+
+  if (goalData.length > 1) {
+    for (var i = 1; i < goalData.length; i++) {
+      goals.push({
+        id: goalData[i][0],
+        name: goalData[i][1],
+        amount: goalData[i][2],
+        type: goalData[i][3],
+        current: goalData[i][4],
+        timestamp: goalData[i][5]
+      });
+    }
+  }
+
+  return createResponse({
+    status: 'success',
+    transactions: transactions,
+    goals: goals
+  });
+}
+
+function addTransaction(transaction) {
+  var sheet = getOrCreateSheet('Transactions');
+
+  // Check if headers exist
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['ID', 'Type', 'Amount', 'Category', 'Description', 'Date', 'Timestamp']);
+  }
+
+  sheet.appendRow([
+    transaction.id,
+    transaction.type,
+    transaction.amount,
+    transaction.category,
+    transaction.description,
+    transaction.date,
+    transaction.timestamp || new Date().toISOString()
+  ]);
+
+  return createResponse({ status: 'success', message: 'Transaction added' });
+}
+
+function updateTransaction(transaction) {
+  var sheet = getOrCreateSheet('Transactions');
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] == transaction.id) {
+      sheet.getRange(i + 1, 1, 1, 7).setValues([[
+        transaction.id,
+        transaction.type,
+        transaction.amount,
+        transaction.category,
+        transaction.description,
+        transaction.date,
+        transaction.timestamp || data[i][6]
+      ]]);
+      return createResponse({ status: 'success', message: 'Transaction updated' });
+    }
+  }
+
+  return createResponse({ status: 'error', message: 'Transaction not found' });
+}
+
+function deleteTransaction(id) {
+  var sheet = getOrCreateSheet('Transactions');
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] == id) {
+      sheet.deleteRow(i + 1);
+      return createResponse({ status: 'success', message: 'Transaction deleted' });
+    }
+  }
+
+  return createResponse({ status: 'error', message: 'Transaction not found' });
+}
+
+function addGoal(goal) {
+  var sheet = getOrCreateSheet('Goals');
+
+  // Check if headers exist
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['ID', 'Name', 'Amount', 'Type', 'Current', 'Timestamp']);
+  }
+
+  sheet.appendRow([
+    goal.id,
+    goal.name,
+    goal.amount,
+    goal.type,
+    goal.current || 0,
+    goal.timestamp || new Date().toISOString()
+  ]);
+
+  return createResponse({ status: 'success', message: 'Goal added' });
+}
+
+function deleteGoal(id) {
+  var sheet = getOrCreateSheet('Goals');
+  var data = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] == id) {
+      sheet.deleteRow(i + 1);
+      return createResponse({ status: 'success', message: 'Goal deleted' });
+    }
+  }
+
+  return createResponse({ status: 'error', message: 'Goal not found' });
+}
+
+function getOrCreateSheet(sheetName) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+  }
+
+  return sheet;
+}
+
+function createResponse(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+            document.getElementById('appScriptCode').textContent = code;
+            document.getElementById('codeModal').classList.add('active');
+        }
+
+        function copyCode() {
+            const code = document.getElementById('appScriptCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showAlert('Code copied to clipboard!', 'success');
+            }).catch(err => {
+                showAlert('Failed to copy code', 'error');
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('codeModal').classList.remove('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
